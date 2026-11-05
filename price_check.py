@@ -86,7 +86,10 @@ def post_discord(content: str) -> None:
     request = Request(
         WEBHOOK_URL,
         data=body,
-        headers={"Content-Type": "application/json; charset=utf-8"},
+        headers={
+            "Content-Type": "application/json; charset=utf-8",
+            "User-Agent": "amazon-price-discord-bot/1.0",
+        },
         method="POST",
     )
     with urlopen(request, timeout=30) as response:

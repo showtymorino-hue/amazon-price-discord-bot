@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
 price_state.json
+price_check.log
 .env

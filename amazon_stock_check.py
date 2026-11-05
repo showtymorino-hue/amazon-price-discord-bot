@@ -51,6 +51,22 @@ def extract_availability(html: str) -> str:
     return "在庫状況不明"
 
 
+def extract_price(html: str) -> str:
+    patterns = [
+        r'class="a-offscreen">(￥[\d,]+)</span>',
+        r'class="a-price-whole">([\d,]+)</span>.*?class="a-price-fraction">(\d+)</span>',
+        r'"displayPrice"\s*:\s*"(￥[\d,]+)"',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, html, re.S | re.I)
+        if not match:
+            continue
+        if len(match.groups()) == 2:
+            return f"￥{match.group(1)}.{match.group(2)}"
+        return compact(match.group(1))
+    return "価格確認不可"
+
+
 def extract_merchant(html: str) -> str:
     match = re.search(r"offer-display-feature-name=\"desktop-merchant-info\".*?offer-display-feature-text-message[^>]*>(.*?)</(?:a|span)>", html, re.S | re.I)
     return compact(match.group(1)) if match else "不明"
@@ -74,6 +90,7 @@ def main() -> int:
         html = fetch_page(PRODUCT_URL)
         title = extract_title(html)
         availability = extract_availability(html)
+        price = extract_price(html)
         merchant = extract_merchant(html)
         asin = extract_asin(html)
         color_ok = not TARGET_COLOR or TARGET_COLOR.lower() in title.lower() or TARGET_COLOR.lower() in page_text(html).lower()
@@ -84,6 +101,7 @@ def main() -> int:
         message = (
             f"Amazon入荷チェック\n{PRODUCT_NAME}\n"
             f"判定: {status}\n在庫: {availability}\n色: {TARGET_COLOR or '指定なし'} ({'一致' if color_ok else '不一致'})\n"
+            f"価格: {price}\n"
             f"販売元: {merchant} ({'一致' if seller_ok else '不一致'})\n"
             f"Amazon発送条件: {'確認' if amazon_fulfilled else '不一致/確認不可'}\n"
             f"確認日時: {checked_at}\nASIN: {asin}\n{PRODUCT_URL}"
